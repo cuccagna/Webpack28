@@ -1,4 +1,3 @@
-import '../sass/_base.scss';
 import { HelloWorldButton } from '../components/hello-world-button/hello-world-button'
 import { MainHeader } from '../components/main-header/main-header';
 import { Logo } from '../components/logo/logo.js';

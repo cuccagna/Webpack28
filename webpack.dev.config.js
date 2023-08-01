@@ -1,16 +1,13 @@
 const pathM = require('path');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
 /* const { CleanWebpackPlugin } = require('clean-webpack-plugin');
  */
-const HtmlWebpackPlugin = require("html-webpack-plugin");
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
-   entry: './src/js/index.js',
    output: {
-      filename: 'js/bundle.js',
       path: pathM.resolve(__dirname, './dist'),
       assetModuleFilename: '[path][name][ext]', 
-      publicPath: './',
+      publicPath: 'auto', // use auto public path instead of `./`
       clean: true /* {
          dry: false,
          keep:/\.css$/ 
@@ -29,7 +26,7 @@ module.exports = {
                  /*  Il logo Angular è 6, 5 Kbyte.Cambia la soglia per includere
                   nel bundle js il logo */
                }
-            }
+            },
          },
          /*rules per quando provi ad importare un file css da javascript. Uso due loaders
          css-loader  legge il contenuto del css e ritorna il contenuto
@@ -38,26 +35,31 @@ module.exports = {
          */
          {
             test: /\.css$/,
-            use: ['style-loader','css-loader'] 
+            use: ['css-loader'] 
          },
          {
             test: /\.scss$/,
-            use: ['style-loader','css-loader','sass-loader'] 
+            use: ['css-loader','sass-loader'] 
          }
       ]
    },
    plugins: [
-      new CopyWebpackPlugin({
-         patterns: [
-            { from: './assets/img', to: './assets/img' }
-         ]
-      }),
-      new HtmlWebpackPlugin({
-        
-         inject: false,
-         template: "./index.ejs", //Puoi mettere anche un file html
-         /* minify:true  */
-      })
+      new HtmlBundlerPlugin({
+         // define entry templates here
+         entry: {
+           index: './src/index.ejs', // => dist/index.html
+         },
+         js: {
+           // output filename of JS
+           filename: 'js/[name].[contenthash:8].js',
+           //inline: true, // inline JS into HTML
+         },
+         css: {
+           // output filename of CSS, replaces the functionality of MiniCssExtractPlugin
+           filename: 'css/[name].[contenthash:8].css',
+           inline: true, // inline CSS into HTML, replaces the functionality of style-loader
+         },
+       }),
       /*Nella seguente configurazione di questo plugin eliminiamo tutti i file
       e le cartelle e sottocartelle a partire dalla cartella .dist che è quella
       specificata in ouput.path
@@ -73,6 +75,18 @@ module.exports = {
            // path.join(process.cwd(),'nomeCartella/**/*')
       //]
    //})
-   ]
-
+   ],
+   // enable HMR with live reload
+   devServer: {
+      open: true, // open in browser
+      static: {
+         directory: pathM.join(__dirname, 'dist'),
+      },
+      watchFiles: {
+         paths: ['src/**/*.*'],
+         options: {
+            usePolling: true,
+         },
+      },
+   },
 }

@@ -1,17 +1,14 @@
 const pathM = require('path');
-const CopyWebpackPlugin = require('copy-webpack-plugin');
-const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 /* const { CleanWebpackPlugin } = require('clean-webpack-plugin');
  */
-const HtmlWebpackPlugin = require("html-webpack-plugin");
+const HtmlBundlerPlugin = require('html-bundler-webpack-plugin');
 
 module.exports = {
    entry: './src/js/index.js',
    output: {
-      filename: 'js/bundle.[contenthash].js',
       path: pathM.resolve(__dirname, './dist'),
       assetModuleFilename: '[path][name].[contenthash][ext]', 
-      publicPath: './',
+      publicPath: 'auto', // use auto public path instead of `./`
       clean: true /* {
          dry: false,
          keep:/\.css$/ 
@@ -29,7 +26,7 @@ module.exports = {
                  /*  Il logo Angular è 6, 5 Kbyte.Cambia la soglia per includere
                   nel bundle js il logo */
                }
-            }
+            },
          },
          /*rules per quando provi ad importare un file css da javascript. Uso due loaders
          css-loader  legge il contenuto del css e ritorna il contenuto
@@ -38,11 +35,11 @@ module.exports = {
          */
          {
             test: /\.css$/,
-            use: [MiniCssExtractPlugin.loader,'css-loader'] 
+            use: ['css-loader'] 
          },
          {
             test: /\.scss$/,
-            use: [MiniCssExtractPlugin.loader,'css-loader','sass-loader'] 
+            use: ['css-loader','sass-loader'] 
          },
          {
             test: /\.js$/,
@@ -65,24 +62,21 @@ module.exports = {
       ]
    },
    plugins: [
-       new CopyWebpackPlugin({
-         patterns: [
-             { from: './assets/img', to: './assets/img/[name].[contenthash][ext]' },
-            
-          ],
-          options: {
-        concurrency: 100,
-      }
+      new HtmlBundlerPlugin({
+         // define entry templates here
+         entry: {
+           index: './src/index.ejs', // => dist/index.html
+         },
+         js: {
+           // output filename of JS
+           filename: 'js/[name].[contenthash:8].js',
+         },
+         css: {
+           // output filename of CSS, replaces the functionality of MiniCssExtractPlugin
+           filename: 'css/[name].[contenthash:8].css',
+         },
+         minify: true,
       }),
-      new MiniCssExtractPlugin({
-      filename:"css/main.[contenthash].css"
-      }),
-      new HtmlWebpackPlugin({
-        
-         inject: false,
-         template: "./index.ejs", //Puoi mettere anche un file html
-         minify:true 
-      })
       /*Nella seguente configurazione di questo plugin eliminiamo tutti i file
       e le cartelle e sottocartelle a partire dalla cartella .dist che è quella
       specificata in ouput.path
